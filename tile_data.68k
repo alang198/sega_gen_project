@@ -1,0 +1,11 @@
+;-------------------------------------------------
+; Author: Alan Gardner
+; Project: Genesis game
+; File: tile_data.68k
+; Holds data
+;-------------------------------------------------
+
+;Memory supports 1280 tiles in current configuration
+;In memory, tiles are stored as 32 bytes, where every four bytes (long word)
+;represents a row and every four bits is a pixel.
+

@@ -1,0 +1,97 @@
+;-----------------------------------------------
+; Author: Alan Gardner
+; Project: Genesis game
+; File: header.68k
+; header area for Genesis ROM
+; includes interrupt and program start vectors
+; along with the header itself
+;-----------------------------------------------
+
+vectors:
+    dc.l $00FFFFFE  ;initial position of stack pointer, end of work RAM
+    dc.l prog_start ;program address start point 
+    
+    ;interrupt and execption handlers, taken from http://namelessalgorithm.com/
+    dc.l   ignore_handler   ; Bus error
+    dc.l   ignore_handler   ; Address error
+    dc.l   ignore_handler   ; Illegal instruction
+    dc.l   ignore_handler   ; Division by zero
+    dc.l   ignore_handler   ; CHK exception
+    dc.l   ignore_handler   ; TRAPV exception
+    dc.l   ignore_handler   ; Privilege violation
+    dc.l   ignore_handler   ; TRACE exception
+    dc.l   ignore_handler   ; Line-A emulator
+    dc.l   ignore_handler   ; Line-F emulator
+    dc.l   ignore_handler   ; Unused (reserved)
+    dc.l   ignore_handler   ; Unused (reserved)
+    dc.l   ignore_handler   ; Unused (reserved)
+    dc.l   ignore_handler   ; Unused (reserved)
+    dc.l   ignore_handler   ; Unused (reserved)
+    dc.l   ignore_handler   ; Unused (reserved)
+    dc.l   ignore_handler   ; Unused (reserved)
+    dc.l   ignore_handler   ; Unused (reserved)
+    dc.l   ignore_handler   ; Unused (reserved)
+    dc.l   ignore_handler   ; Unused (reserved)
+    dc.l   ignore_handler   ; Unused (reserved)
+    dc.l   ignore_handler   ; Unused (reserved)
+    dc.l   ignore_handler   ; Spurious exception
+    dc.l   ignore_handler   ; IRQ level 1
+    dc.l   ignore_handler   ; IRQ level 2
+    dc.l   ignore_handler   ; IRQ level 3
+    dc.l   ignore_handler   ; IRQ level 4 (horizontal retrace interrupt)
+    dc.l   ignore_handler   ; IRQ level 5
+    dc.l   ignore_handler   ; IRQ level 6 (vertical retrace interrupt)
+    dc.l   ignore_handler   ; IRQ level 7
+    dc.l   ignore_handler   ; TRAP #00 exception
+    dc.l   ignore_handler   ; TRAP #01 exception
+    dc.l   ignore_handler   ; TRAP #02 exception
+    dc.l   ignore_handler   ; TRAP #03 exception
+    dc.l   ignore_handler   ; TRAP #04 exception
+    dc.l   ignore_handler   ; TRAP #05 exception
+    dc.l   ignore_handler   ; TRAP #06 exception
+    dc.l   ignore_handler   ; TRAP #07 exception
+    dc.l   ignore_handler   ; TRAP #08 exception
+    dc.l   ignore_handler   ; TRAP #09 exception
+    dc.l   ignore_handler   ; TRAP #10 exception
+    dc.l   ignore_handler   ; TRAP #11 exception
+    dc.l   ignore_handler   ; TRAP #12 exception
+    dc.l   ignore_handler   ; TRAP #13 exception
+    dc.l   ignore_handler   ; TRAP #14 exception
+    dc.l   ignore_handler   ; TRAP #15 exception
+    dc.l   ignore_handler   ; Unused (reserved)
+    dc.l   ignore_handler   ; Unused (reserved)
+    dc.l   ignore_handler   ; Unused (reserved)
+    dc.l   ignore_handler   ; Unused (reserved)
+    dc.l   ignore_handler   ; Unused (reserved)
+    dc.l   ignore_handler   ; Unused (reserved)
+    dc.l   ignore_handler   ; Unused (reserved)
+    dc.l   ignore_handler   ; Unused (reserved)
+    dc.l   ignore_handler   ; Unused (reserved)
+    dc.l   ignore_handler   ; Unused (reserved)
+    dc.l   ignore_handler   ; Unused (reserved)
+    dc.l   ignore_handler   ; Unused (reserved)
+    dc.l   ignore_handler   ; Unused (reserved)
+    dc.l   ignore_handler   ; Unused (reserved)
+    dc.l   ignore_handler   ; Unused (reserved)
+    dc.l   ignore_handler   ; Unused (reserved)
+    ;------------------------------------------------------------
+    
+    ;Here begins the header proper
+header:
+    dc.b "SEGA GENESIS    "                                 ;console (Genesis or Megadrive) (16 bytes)
+    dc.b "(C) ALAN 2019   "                                 ;firmname and build date (16 bytes)
+    dc.b "AN UNNAMED PIECE OF SOFTWARE                    " ;domestic name (48 bytes)
+    dc.b "AN UNNAMED PIECE OF SOFTWARE                    " ;international name (48 bytes)
+    dc.b "GM 20191610-01"                                   ;serial number (date created here) and version number (14 bytes)
+    dc.w $0000                                              ;checksum, nobody cares
+    dc.b "J               "                                 ;I/O device, unused (16 bytes)
+    dc.l $00000000                                          ;ROM start address (long (32bits))
+    dc.l rom_end                                            ;ROM end point, just a label to whatever address is at the end of ROM (long)
+    dc.l $00FF0000                                          ;RAM start point (long)
+    dc.l $00FFFFFF                                          ;RAM end point (long)
+    dc.b "RA", $F8, $20                                     ;SRAM type (RA?) (addressing odd bytes only (might change)) reference wikicode
+    dc.l $00200001                                          ;SRAM start address
+    dc.l $0020FFFF                                          ;SRAM end address
+    dc.b "            "                                     ;modem info (12 bytes?)
+    dc.b "This had better work                    "         ;comment (40 bytes?)
+    dc.b "JUE             "                                 ;region (16 bytes)

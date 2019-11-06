@@ -1,0 +1,142 @@
+;-------------------------------------------------
+; Author: Alan Gardner
+; Project: Genesis game
+; File: vdp_func.68k
+; Contains any and all functions relating to the
+; VDP
+;-------------------------------------------------
+
+;Print screen
+;writes a ascii text string using a passed address
+;in a0
+;---------------------------------------------------
+print_screen:
+
+    move.l  a1,-(sp)    ;push a1 onto stack
+    move.l  d0,-(sp)    ;push d0 onto stack
+
+    SetVramAddr #$E000
+    lea (vdp_data),a1
+    clr.l   d0
+    
+print_loop:
+    move.b  (a0)+,d0
+    tst.b d0
+    beq.b exit
+    
+    sub.b   #$20,d0
+    move.w  d0,(a1)
+    
+    jmp print_loop
+    
+exit:
+
+    move.l (sp)+,d0 ;pop d0
+    move.l (sp)+,a1 ;pop a1
+
+    rts
+;---------------------------------------------------
+
+
+;Clear screen
+;Sets all tiles to background color
+;---------------------------------------------------
+clear_screen:
+    move.l  d0,-(sp)
+    move.l  d1,-(sp)
+    move.l  a1,-(sp)
+    
+    SetVramAddr #$E000  ;front layer
+    lea (vdp_data),a1
+    move.w   #1023,d1     ;4096/4 - 1
+    clr.l   d0
+    
+clear_loop1:
+    move.l  d0,(a1)
+    dbra    d1,clear_loop1
+    
+    SetVramAddr #$C000  ;back layer
+    move.w  #1023,d1
+
+clear_loop2:
+    move.l  d0,(a1)
+    dbra    d1,clear_loop2
+    
+    move.l  (sp)+,a1
+    move.l  (sp)+,d1
+    move.l  (sp)+,d0
+    
+    rts
+;---------------------------------------------------
+
+
+;Print clk
+;Displays the clock to the screen
+;---------------------------------------------------
+print_clk:
+    move.l  d4,-(sp)
+    move.l  d5,-(sp)
+    move.l  d6,-(sp)    ;push d6 onto stack
+    move.l  a0,-(sp)
+    move.l  a1,-(sp)    ;push a1 onto stack
+    
+    clr.l   d4
+    clr.l   d5
+    clr.l   d6
+    
+    SetVramAddr #$E080
+    lea     (vdp_data),a1
+    lea     (hours),a0
+    move.b  #3,d4
+    
+digit_isolate:
+    move.b  (a0)+,d6
+    divu.w  #10,d6  ;divide by 10
+    
+    move.l  d6,d5   ;we'll want to keep the remainder
+    
+    and.w   #$00FF,d6
+    add.w   #16,d6  ;tile offset in font list
+    
+    move.w  d6,(a1)
+    
+    lsr.l   #8,d5   ;move remainder down (this is the ones digit)
+    lsr.l   #8,d5   ;move rest of remainder
+    
+    add.w  #16,d5  ;add offset
+    
+    move.w  d5,(a1)
+    
+    tst.b   d4
+    beq     skip_colon
+    
+    move.w  #$001A,(a1) ;print ':'
+    
+    clr.l   d6
+    
+    dbra    d4,digit_isolate
+
+skip_colon:
+
+    move.l  (sp)+,a1
+    move.l  (sp)+,a0
+    move.l  (sp)+,d6
+    move.l  (sp)+,d5
+    move.l  (sp)+,d4
+    
+    rts
+;----------------------------------------------
+    
+;    SetVramAddr #$E000
+    
+;    move.w  #$0000,(a1)
+;    move.w  #$0111,(a1)
+    
+    
+    
+    
+;    move.w  #$0f00,vdp_data        ; blue
+;    move.w  #$00f0,vdp_data        ; green
+    
+    
+    ;jmp rom_end

@@ -1,0 +1,140 @@
+;---------------------------------------------------
+; Author: Alan Gardner
+; Project: Genesis game
+; File: main.68k
+; All the main game stuff goes here
+;---------------------------------------------------
+
+    include 'header.68k'
+    include 'init.68k'
+    include 'variables.68k'
+    
+macro_includes:
+    include 'macros.68k'
+    
+init_font:
+    include 'init_font.68k'
+    
+    
+main:
+
+wait_vb:
+wait_vb_end:
+    move.w  (vdp_control),d2
+    and.w   #$0008,d2
+    bne     wait_vb_end
+    
+wait_vb_start:
+    move.w  (vdp_control),d2
+    and.w   #$0008,d2
+    beq     wait_vb_start
+    
+    update_clk
+    jsr print_clk
+    
+    read_controller
+    
+    move.w  d0,d1
+    and.w   #$80,d0 ;check start
+    beq update_screen_start
+    
+    move.w  d1,d0
+    and.w   #$40,d0 ;check A
+    beq update_screen_a
+    
+    move.w  d1,d0
+    and.w   #$20,d0 ;check C
+    beq update_screen_c
+    
+    move.w  d1,d0
+    and.w   #$10,d0 ;check B
+    beq update_screen_b
+    
+    move.w  d1,d0
+    and.w   #$08,d0 ;check right
+    beq update_screen_right
+    
+    move.w  d1,d0
+    and.w   #$04,d0 ;check left
+    beq update_screen_left
+    
+    move.w  d1,d0
+    and.w   #$02,d0 ;check down
+    beq update_screen_down
+    
+    move.w  d1,d0
+    and.w   #$01,d0 ;check up
+    beq update_screen_up
+    
+    lea test_string_spaces,a0
+    jsr print_screen
+    
+    jmp wait_vb
+    
+    
+update_screen_start:
+    lea test_string_start,a0
+    jsr print_screen
+    jmp wait_vb
+update_screen_a:
+    lea test_string_a,a0
+    jsr print_screen
+    jmp wait_vb
+update_screen_c:
+    lea test_string_c,a0
+    jsr print_screen
+    jmp wait_vb
+update_screen_b:
+    lea test_string_b,a0
+    jsr print_screen
+    jmp wait_vb
+update_screen_right:
+    lea test_string_right,a0
+    jsr print_screen
+    jmp wait_vb
+update_screen_left:
+    lea test_string_left,a0
+    jsr print_screen
+    jmp wait_vb
+update_screen_down:
+    lea test_string_down,a0
+    jsr print_screen
+    jmp wait_vb
+update_screen_up:
+    lea test_string_up,a0
+    jsr print_screen
+    jmp wait_vb
+    
+    
+
+test_string_start:
+    dc.b    "Start Pressed!",$0
+test_string_a:
+    dc.b    "A",$0
+test_string_b:
+    dc.b    "B",$0
+test_string_c:
+    dc.b    "C",$0
+test_string_up:
+    dc.b    "Up!",$0
+test_string_down:
+    dc.b    "Down!",$0
+test_string_left:
+    dc.b    "Left!",$0
+test_string_right:
+    dc.b    "Right!",$0
+test_string_spaces:
+    dc.b    "               ",$0
+    
+ignore_handler:
+    rte ;return from exception
+    
+function_includes:
+    include 'vdp_func.68k'
+    
+data_includes:
+    include 'font.68k'
+    include 'tile_data.68k'
+
+rom_end:
+    jsr *

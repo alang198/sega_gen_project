@@ -1,0 +1,13 @@
+;-------------------------------------------------------
+; Author:
+; Project: Genesis game
+; File: variables.68k
+; Holds all the variable definitions
+;-------------------------------------------------------
+
+control_state   equ $FF1000 ;2 bytes, holds state of controller
+
+hours           equ $FF1002 ;1 byte, hours counter
+minutes         equ $FF1003 ;1 byte, minutes counter
+seconds         equ $FF1004 ;1 byte, seconds counter
+frames          equ $FF1005 ;1 bytes frame counter (for clock)

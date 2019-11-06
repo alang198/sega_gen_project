@@ -1,0 +1,45 @@
+;------------------------------------------------------------------
+; Author: Alan Gardner
+; Project: Genesis game
+; File: init_font.68k
+; Puts font into VRAM where it will remain permanently
+;------------------------------------------------------------------
+
+init_pallete_zero:  ;static pallete for system stuff
+    move.l  #cram_write_cmd,vdp_control ; Set up VDP to write CRAM addr $0000
+    move.w  #$0000,vdp_data        ; black (BGR)
+    move.w  #$00EE,vdp_data        ; yellow
+    move.w  #$0CCC,vdp_data        ; silver
+    move.w  #$00E0,vdp_data        ; green
+    move.w  #$00E0,vdp_data
+    move.w  #$00E0,vdp_data
+    move.w  #$00E0,vdp_data
+    move.w  #$00E0,vdp_data
+    move.w  #$00E0,vdp_data
+    move.w  #$00E0,vdp_data
+    move.w  #$00E0,vdp_data
+    move.w  #$00E0,vdp_data
+    move.w  #$00E0,vdp_data
+    move.w  #$00E0,vdp_data
+    move.w  #$00E0,vdp_data
+    move.w  #$00E0,vdp_data
+
+write_font_to_vram:
+    lea alphabet,a0
+    lea (vdp_data),a1
+    
+    moveQ   #89,d0
+    
+    SetVramAddr #$0020
+
+font_loop:
+    move.l  (a0)+,(a1)
+    move.l  (a0)+,(a1)
+    move.l  (a0)+,(a1)
+    move.l  (a0)+,(a1)
+    move.l  (a0)+,(a1)
+    move.l  (a0)+,(a1)
+    move.l  (a0)+,(a1)
+    move.l  (a0)+,(a1)
+    
+    dbra    d0,font_loop

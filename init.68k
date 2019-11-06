@@ -1,0 +1,152 @@
+;-------------------------------------------------
+; Author: Alan Gardner
+; Project: Genesis game
+; File: init.68k
+; Performs initialization protocols i.e. TMSS,
+; cleaning VDP RAM, setting default palette etc
+;-------------------------------------------------
+
+;constants to init VDP, taken from plutiedev.com-----
+;http://nemesis.hacking-cult.org/MegaDrive/Documentation/GenesisSoftwareManual.pdf
+vdp_constants:
+VDPREG_MODE1:     equ $8000  ; Mode register #1
+VDPREG_MODE2:     equ $8100  ; Mode register #2
+VDPREG_MODE3:     equ $8B00  ; Mode register #3
+VDPREG_MODE4:     equ $8C00  ; Mode register #4
+
+VDPREG_PLANEA:    equ $8200  ; Plane A table address
+VDPREG_PLANEB:    equ $8400  ; Plane B table address
+VDPREG_SPRITE:    equ $8500  ; Sprite table address
+VDPREG_WINDOW:    equ $8300  ; Window table address
+VDPREG_HSCROLL:   equ $8D00  ; HScroll table address
+
+VDPREG_SIZE:      equ $9000  ; Plane A and B size
+VDPREG_WINX:      equ $9100  ; Window X split position
+VDPREG_WINY:      equ $9200  ; Window Y split position
+VDPREG_INCR:      equ $8F00  ; Autoincrement
+VDPREG_BGCOL:     equ $8700  ; Background color
+VDPREG_HRATE:     equ $8A00  ; HBlank interrupt rate
+
+VDPREG_DMALEN_L:  equ $9300  ; DMA length (low)
+VDPREG_DMALEN_H:  equ $9400  ; DMA length (high)
+VDPREG_DMASRC_L:  equ $9500  ; DMA source (low)
+VDPREG_DMASRC_M:  equ $9600  ; DMA source (mid)
+VDPREG_DMASRC_H:  equ $9700  ; DMA source (high)
+;-----------------------------------------------------
+
+video_constants:
+vdp_data    equ $C00000 ;VDP data port
+vdp_control equ $C00004 ;VDP control port
+vdp_line    equ $C00008 ;VDP H/V counter
+
+vram_write_cmd  equ $40000000
+cram_write_cmd  equ $C0000000
+vsram_write_cmd equ $40000010
+
+z80_constants:
+z80_ram     equ $A00000 ;z80 ram starting address
+z80_req     equ $A11100 ;bus request
+z80_res     equ $A11200 ;reset
+
+controller_constants:
+p1_control  equ $A10009
+p1_data     equ $A10003
+
+prog_start:
+    move.w #$2700,sr   ;disable interrupts
+    
+;taken from wikibooks
+tmss_check:
+    move.b $A10001,d0  ;get vesion number
+    andi.b #$0F,d0
+    beq.b version_0     ;beq works on zero flag
+    move.l #'SEGA',$A14000
+version_0: ;if not version 0 write SEGA to address A14000
+
+control_init:
+    move.w  #$100,(z80_req) ;pause z80
+    move.b  #$40,(p1_control)
+    move.b  #$40,(p1_data)
+    move.w  #$000,(z80_req) ;resume z80
+
+vdp_init:
+    tst.w (vdp_control) ;read control port to reset state
+    
+    lea (vdp_control),a0   ;get address at label
+    
+    ;mode registers----------------------------------------------------------
+    move.w #VDPREG_MODE1|$04,(a0)  ;Mode reg 1: disable H interrupt & enable read and H,V counter
+    move.w #VDPREG_MODE2|$44,(a0)  ;Mode reg 2: enable display, disable V interrupt, DMA disable, enable NTSC mode
+    move.w #VDPREG_MODE3|$00,(a0)  ;Mode reg 3: disable external interrupt (priority 2), full scroll mode (vertical), full scroll mode (horizontal)
+    move.w #VDPREG_MODE4|$81,(a0)  ;Mode reg 4: 40 tile mode, disable shadow/highlight, no interlacing
+    ;-------------------------------------------------------------------------
+    
+    ;table base addresses-----------------------------------------------------
+    move.w #VDPREG_PLANEA|$30,(a0) ;plane A addr: plane A table base addr ($C000) val << 10
+    move.w #VDPREG_PLANEB|$07,(a0) ;plane B addr: plane B table base addr ($E000) val << 13
+    move.w #VDPREG_SPRITE|$6C,(a0) ;sprite addr:  sprite table base addr ($D800) val << 9
+    move.w #VDPREG_WINDOW|$3C,(a0) ;window addr:  window table base addr ($F000) val << 10
+    move.w #VDPREG_HSCROLL|$3F,(a0);HScroll addr: hscroll  table base addr ($FC00) val << 10
+    ;-------------------------------------------------------------------------
+    
+    ;size and color details---------------------------------------------------
+    move.w  #VDPREG_SIZE|$01,(a0)     ; Tilemap size (set to 64x32)
+    move.w  #VDPREG_WINX|$00,(a0)     ; Window X split (split at 0)
+    move.w  #VDPREG_WINY|$00,(a0)     ; Window Y split (split at 0)
+    move.w  #VDPREG_INCR|$02,(a0)     ; Autoincrement (autoincrement 2 bytes)
+    move.w  #VDPREG_BGCOL|$00,(a0)    ; Background color (palette 0, color 0)
+    move.w  #VDPREG_HRATE|$FF,(a0)    ; HBlank IRQ rate  (255 lines per hint)
+    ;-------------------------------------------------------------------------
+
+    
+    ;DMA stuff----------------------------------------------------------------
+    move.w  #VDPREG_DMALEN_L|$FF,(a0)
+    move.w  #VDPREG_DMALEN_H|$FF,(a0)
+    move.w  #VDPREG_DMASRC_L|$00,(a0)
+    move.w  #VDPREG_DMASRC_M|$00,(a0)
+    move.w  #VDPREG_DMASRC_H|$80,(a0)
+    ;-------------------------------------------------------------------------
+    
+    ;unused stuff-------------------------------------------------------------
+    move.w  #$8600,(a0)
+    move.w  #$8800,(a0)
+    move.w  #$8900,(a0)
+    move.w  #$8E00,(a0)
+    ;-------------------------------------------------------------------------
+;need to clean up VRAM, CRAM and  VSRAM (vertical scroll RAM)
+;code structure taken from plutiedev.com
+vdp_memclean:
+vram_size:  equ 65536   ;64KB
+cram_size   equ 128
+vsram_size  equ 80
+
+    moveq #0,d0 ; fill d0 with zeros
+    lea (vdp_control),a0
+    lea (vdp_data),a1
+    
+    ;VRAM---------------------------------------------------------------------
+    move.l #vram_write_cmd,(a0)
+    move.w #(vram_size/4)-1,d1  ;writing four bytes at a time
+clean_vram:
+    move.l d0,(a1)
+    dbra d1,clean_vram
+    ;-------------------------------------------------------------------------
+    
+    ;CRAM---------------------------------------------------------------------
+    move.l #cram_write_cmd,(a0)
+    move.w #(cram_size/4)-1,d1
+clean_cram
+    move.l d0,(a1)
+    dbra d1,clean_cram
+    ;-------------------------------------------------------------------------
+    
+    ;VSRAM--------------------------------------------------------------------
+    move.l #vsram_write_cmd,(a0)
+    move.w #(vsram_size/4)-1,d1
+clean_vsram
+    move.l d0,(a1)
+    dbra d1,clean_vsram
+    ;-------------------------------------------------------------------------
+    
+    
+    

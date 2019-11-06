@@ -1,0 +1,135 @@
+;-------------------------------------------------
+; Author: Alan Gardner
+; Project: Genesis game
+; File: macros.68k
+; Contains all macros, if I didn't write them a link
+; to the source is provided
+; ------------------------------------------------
+
+; Only set the VRAM address once, remember the
+; autoincrement register that was set eariler?
+; Well I'm assuming that's what it controls
+; VRAM, CRAM and VSRAM address setting
+; used with fixed addresses
+; from: https://plutiedev.com/writing-video (edit to be VASM complient by me)
+; example: SetVramAddr 1234
+;-------------------------------------------------
+; VDP memory: bits 13-0 of hte address go into bits 29-16
+; Bits 15-14 of addres go into bits 1-0
+; Then OR with with the write command
+SetXramAddr: macro \1, \2
+    move.l d7,-(sp) ;push d7 (macro temp) to stack
+    move.l \1,d7   ;move address into temp
+    and.l #$FFFF,d7
+    lsl.l #2,d7
+    lsr.w #2,d7
+    swap d7
+    or.l \2,d7
+    move.l d7,(vdp_control)
+    move.l (sp)+,d7 ;pop d7 (macro temp) from stack
+    ;move.l  #(((addr)&$3FFF)<<16)|(((addr)&$C000)>>14)|(cmd),(vdp_control)
+    endm
+
+SetVramAddr: macro \1
+    SetXramAddr \1,#vram_write_cmd
+    endm
+
+SetCramAddr: macro \1
+    SetXramAddr \1,#cram_write_cmd
+    endm
+
+SetVsramAddr: macro \1
+    SetXramAddr \1,#vsram_write_cmd
+    endm
+;-------------------------------------------------
+
+
+
+; VRAM, CRAM and VSRAM address setting
+; used when VRAM address to write to is stored in
+; a register (e.g. d0)
+; from: https://plutiedev.com/writing-video
+; example: SetVramAddrReg d0
+;--------------------------------------------------
+SetXramAddrReg: macro \1,\2
+    and.l   #$FFFF,\1
+    lsl.l   #2,\1
+    lsr.w   #2,\1
+    swap    \1
+    or.l    \2,\1
+    move.l  \1,(vdp_control)
+    endm
+
+SetVramAddrReg: macro \1
+    SetXramAddrReg \1,#vram_write_cmd
+    endm
+
+SetCramAddrReg: macro \1
+    SetXramAddrReg \1,#cram_write_cmd
+    endm
+
+SetVsramAddrReg: macro \1
+    SetXramAddrReg \1,#vsram_write_cmd
+    endm
+;---------------------------------------------------
+
+;Read controller ports (and put result in d0)
+;---------------------------------------------------
+read_controller: macro
+    move.w  #$100,(z80_req) ;pause Z80
+    move.b  #$40,(p1_data)  ;first step
+    nop                     ;delay
+    nop
+    nop
+    nop
+    move.b  (p1_data),d7    ;read C,B,Right,Left,Down,Up
+    
+    move.b  #$00,(p1_data)  ;second step
+    nop
+    nop
+    nop
+    nop
+    move.b  (p1_data),d0    ;read Start,A,NUL,NUL,Down,Up
+    move.w  #$000,(z80_req) ;resume z80_req
+    
+    and.b   #$3F,d7
+    and.b   #$30,d0
+    lsl.b   #2,d0
+    or.b    d7,d0           ;Start,A,C,B,Right,Left,Down,Up
+    
+    endm
+;-----------------------------------------------------
+
+;Update the clock
+;-----------------------------------------------------
+update_clk: macro
+    move.b  (frames),d7
+    add.b   #1,d7
+    sub.b   #60,d7
+    beq     update_sec
+    add.b   #1,(frames)
+    jmp     update_clk_done
+update_sec:
+    move.b  #$00,(frames)
+    move.b  (seconds),d7
+    add.b   #1,d7
+    sub.b   #60,d7
+    beq     update_min
+    add.b   #1,(seconds)
+    jmp     update_clk_done
+update_min:
+    move.b  #$00,(seconds)
+    move.b  (minutes),d7
+    add.b   #1,d7
+    sub.b   #60,d7
+    beq     update_hr
+    add.b   #1,(minutes)
+    jmp     update_clk_done
+update_hr
+    move.b  #$00,(minutes)
+    add.b   #1,(hours)
+    
+update_clk_done:
+    
+    endm
+;-----------------------------------------------------
