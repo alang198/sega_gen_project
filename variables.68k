@@ -10,4 +10,19 @@ control_state   equ $FF1000 ;2 bytes, holds state of controller
 hours           equ $FF1002 ;1 byte, hours counter
 minutes         equ $FF1003 ;1 byte, minutes counter
 seconds         equ $FF1004 ;1 byte, seconds counter
-frames          equ $FF1005 ;1 bytes frame counter (for clock)
+frames          equ $FF1005 ;1 byte frame counter (for clock)
+
+sprite_count    equ $FF1006 ;1 byte, number of sprites on screen (max 80)
+sprites_to_draw equ $FF1007 ;1 byte, number of sprites to draw on the screen
+
+;sprite table
+;first sprite always main character
+;layout:
+;- - - - - - Y Y    Y Y Y Y Y Y Y Y
+;- - - - W W H H    - L L L L L L L
+;P C C V H T T T    T T T T T T T T
+;- - - - - - - X    X X X X X X X X
+char_y_pos      equ $FF2000 ;2 bytes, the y pos of the char (10 bits)
+char_prop1      equ $FF2002 ;2 bytes, Width,Height,Link
+char_prop2      equ $FF2004 ;2 bytes, Priority,Palette,Vflip,Hflip,tile#
+char_x_pos      equ $FF2006 ;2 bytes, the x pos of the char (9 bits)

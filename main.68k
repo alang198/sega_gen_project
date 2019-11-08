@@ -18,6 +18,14 @@ init_font:
     
 main:
 
+    ;init test sprite
+    move.w  #128,(char_x_pos)
+    move.w  #128,(char_y_pos)
+    move.w  #$0000,(char_prop1)
+    move.w  #$0010,(char_prop2)
+    
+    
+
 ;wait for next VB period
 wait_vb:
 wait_vb_end:
@@ -30,8 +38,22 @@ wait_vb_start:
     and.w   #$0008,d2
     beq     wait_vb_start
     
+    move.b  #$00,(sprite_count)   ;clear sprite count (needs to happen each frame)
+    
+    ;playing with scrolling (scrolls everything off the screen)
+    ;add.w   #1,d5
+    ;SetVramAddr #$FC02
+    ;lea (vdp_data),a1
+    ;move.w  d5,(a1)
+    
     update_clk
     jsr print_clk
+    
+    move.w  (char_y_pos),d0
+    move.w  (char_prop1),d1
+    move.w  (char_prop2),d2
+    move.w  (char_x_pos),d3
+    jsr update_sprite_tilemap
     
     read_controller
     move.w  (control_state),d0
@@ -91,18 +113,24 @@ update_screen_b:
     jsr print_screen
     jmp wait_vb
 update_screen_right:
+    or.w    #$0800,(char_prop2)
+    add.w   #1,(char_x_pos)
     lea test_string_right,a0
     jsr print_screen
     jmp wait_vb
 update_screen_left:
+    and.w   #$F7FF,(char_prop2)
+    add.w   #-1,(char_x_pos)
     lea test_string_left,a0
     jsr print_screen
     jmp wait_vb
 update_screen_down:
+    add.w   #1,(char_y_pos)
     lea test_string_down,a0
     jsr print_screen
     jmp wait_vb
 update_screen_up:
+    add.w   #-1,(char_y_pos)
     lea test_string_up,a0
     jsr print_screen
     jmp wait_vb

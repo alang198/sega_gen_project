@@ -126,7 +126,36 @@ skip_colon:
     
     rts
 ;----------------------------------------------
+
+;Update Sprite tilemaps
+;Puts the sprite with properies in d0,d1,d2 and d3 into
+;the tilemap in VRAM ($D800)
+;-------------------------------------------------------
+update_sprite_tilemap:
+    move.l  a1,-(sp)
+    move.l  d4,-(sp)
     
+    clr.l   d4
+    move.b  (sprite_count),d4
+    lsl.b   #3,d4       ;d4 * 8
+    add.w   #$D800,d4   ;d4 + $D800
+    
+    add.b   #1,(sprite_count)
+    
+    SetVramAddrReg  d4
+    lea (vdp_data),a1
+    
+    move.w  d0,(a1) ;y pos
+    move.w  d1,(a1) ;prop1
+    move.w  d2,(a1) ;prop2
+    move.w  d3,(a1) ;x pos
+
+update_sprite_tilemap_exit:
+    move.l  (sp)+,d4
+    move.l  (sp)+,a1
+    
+    rts
+;--------------------------------------------------------
 ;    SetVramAddr #$E000
     
 ;    move.w  #$0000,(a1)

@@ -147,7 +147,7 @@ alphabet:
     dc.l    $00000000
     
     ;numbers
-    dc.l    $00111000   ;0
+    dc.l    $00111000   ;0  ;16
     dc.l    $01000100
     dc.l    $10001010
     dc.l    $10010010
@@ -826,6 +826,6 @@ alphabet:
     dc.l    $01000000
     dc.l    $11111110
     dc.l    $00000000
-    
+alphabet_end:
     
 
