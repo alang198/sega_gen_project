@@ -18,6 +18,7 @@ init_font:
     
 main:
 
+;wait for next VB period
 wait_vb:
 wait_vb_end:
     move.w  (vdp_control),d2
@@ -33,6 +34,7 @@ wait_vb_start:
     jsr print_clk
     
     read_controller
+    move.w  (control_state),d0
     
     move.w  d0,d1
     and.w   #$80,d0 ;check start

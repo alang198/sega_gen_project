@@ -6,6 +6,10 @@
 ; to the source is provided
 ; ------------------------------------------------
 
+;d6 and d7 are used as macro temporaries (think $at from MIPS)
+;avoid using them in normal operation (especially d7)
+;don't want to have to deal with pushing them everytime
+
 ; Only set the VRAM address once, remember the
 ; autoincrement register that was set eariler?
 ; Well I'm assuming that's what it controls
@@ -18,7 +22,7 @@
 ; Bits 15-14 of addres go into bits 1-0
 ; Then OR with with the write command
 SetXramAddr: macro \1, \2
-    move.l d7,-(sp) ;push d7 (macro temp) to stack
+    ;move.l d7,-(sp) ;push d7 (macro temp) to stack
     move.l \1,d7   ;move address into temp
     and.l #$FFFF,d7
     lsl.l #2,d7
@@ -26,7 +30,7 @@ SetXramAddr: macro \1, \2
     swap d7
     or.l \2,d7
     move.l d7,(vdp_control)
-    move.l (sp)+,d7 ;pop d7 (macro temp) from stack
+    ;move.l (sp)+,d7 ;pop d7 (macro temp) from stack
     ;move.l  #(((addr)&$3FFF)<<16)|(((addr)&$C000)>>14)|(cmd),(vdp_control)
     endm
 
@@ -73,7 +77,7 @@ SetVsramAddrReg: macro \1
     endm
 ;---------------------------------------------------
 
-;Read controller ports (and put result in d0)
+;Read controller ports (and put result in control_state)
 ;---------------------------------------------------
 read_controller: macro
     move.w  #$100,(z80_req) ;pause Z80
@@ -89,13 +93,14 @@ read_controller: macro
     nop
     nop
     nop
-    move.b  (p1_data),d0    ;read Start,A,NUL,NUL,Down,Up
-    move.w  #$000,(z80_req) ;resume z80_req
+    move.b  (p1_data),d6    ;read Start,A,NUL,NUL,Down,Up
+    move.w  #$000,(z80_req) ;resume Z80
     
     and.b   #$3F,d7
-    and.b   #$30,d0
-    lsl.b   #2,d0
-    or.b    d7,d0           ;Start,A,C,B,Right,Left,Down,Up
+    and.b   #$30,d6
+    lsl.b   #2,d6
+    or.b    d7,d6           ;Start,A,C,B,Right,Left,Down,Up
+    move.w  d6,(control_state)
     
     endm
 ;-----------------------------------------------------
